@@ -1,0 +1,179 @@
+/** Displays confirmation dialog ("Are you sure?").
+ * @return bool true - user have clicked 'yes', false - 'no'
+ */
+function sure(sMsg){
+    var sMess;
+    sMess = (sMsg && sMsg.length > 10) ? sMsg : 'Are you sure that you want to delete this item ?';
+    var aMessages = aMessages;
+    if (aMessages && aMessages['js.sure'])
+         sMess = aMessages['js.sure'];
+    return confirm(sMess);
+}
+
+function vsbBlock(iId, dHid)
+{
+    var sAct = document.getElementById(iId);
+    var sHid = (typeof(dHid) != 'undefined') ? document.getElementById(dHid) : false;
+    
+    if(!sHid)
+    {
+        if(sAct.style.display == "none")
+            sAct.style.display = "block";
+        else
+            sAct.style.display = "none";
+    }
+    else
+    {
+        sAct.style.display = "block";
+        sHid.style.display = "none";
+    }
+}
+
+function formatMes(sKey)
+{
+    var i = 1;
+    var sMsg = aMessages[sKey];
+    var sMsg2 = aMessages[sKey];
+    while (sMsg.length)
+    {
+        if (sMsg.search(/%s/) != -1)
+        {
+            sMsg = sMsg.replace(/.*?(%s.*|\n)/ , '$1');
+            sMsg = sMsg.replace(/^%s/, '');
+            sMsg2 = sMsg2.replace(/%s/, arguments[i]);
+            i++;
+        }
+        else
+        {
+            sMsg = sMsg.replace(/.*/, '');
+        }
+    }
+    return sMsg2;
+}
+/** Open popup window.
+ * @param string url       url to open in popup window
+ * @param string name      window name
+ * @param int    width     window width
+ * @param int    height    window height
+ * @param bool   bIsResize true - window resizable, false - fixed size
+ */
+function openWin(url, name, width, height, bIsResize){
+  if (!width)
+        width = screen.width*0.9;
+  if (!height)
+        height = screen.height*0.75;
+  IsReize = bIsResize?1:0;
+  var newWindow = window.open(url, name, 'left=' + Math.ceil((screen.width - width)/2) + ',top=' + Math.ceil((0+screen.height - height)/2) + ',width=' + width + ',height=' + height + ',location=0,toolbar=0,directories=0,status=0,menubar=0,scrollbars=1,resizable='+bIsResize+',channelmode=0,fullscreen=0');
+  return false;
+}
+
+
+/** Selects/deselects all checkbox with given name
+ * @param string name checbox name
+ * @param bool   val  true - select, false - deselect boxes
+ */
+function selectAll(name,val){
+        a = document.getElementsByName(name);
+        for(i=0;i<a.length;++i) {
+                a[i].checked =   val;
+        }
+}
+
+/** Returns value of selected item (singel or first for multiselect)
+ *  in SELECT element.
+ * @param string sName select element name
+ * @return mixed selected element value or 0 - if none selected
+ */
+function getSelectedId( sName ){
+        var a = document.getElementsByName(sName);
+        for(i=0;i<a.length;++i)
+                if(a[i].checked) return a[i].value;
+        return 0;
+}
+
+/** Clear form elements. Used insted reset() when neede clear elements
+ *  but not reset to start values.
+ * @param string formName name form to clear
+ */
+function clearForm(formName)
+{
+        formName.reset();
+        var a = formName.elements;
+        for(i=0;i<a.length;++i)
+        {
+                type_input = a[i].type.toLowerCase();
+                if(type_input == 'select-one') {
+                        a[i].selectedIndex = 0;
+                } else if (type_input == 'checkbox') {
+                        a[i].checked = false;
+                } else if (type_input == 'file') {
+                } else if (type_input == 'submit') {
+                } else if (type_input == 'button') {
+                } else {
+                        a[i].value = '';
+                }
+        }
+}
+
+
+
+/** Inserts text in textarea (replaces selection or insert to the end of text)
+ * @param object oTextArea textarea object
+ * @param string sText     text to insert
+ * @return bool true
+ */
+function insertToTextArea(oTextArea, sText) {
+    //for IE
+    if (document.selection) {
+            oTextArea.focus();
+            oSel = document.selection.createRange();
+            oSel.text = sText;
+    }
+    //for MOZILLA/NETSCAPE
+    else if (oTextArea.selectionStart || oTextArea.selectionStart == "0") {
+            var startPos  = oTextArea.selectionStart;
+            var endPos    = oTextArea.selectionEnd;
+            var str       = oTextArea.value;
+
+            oTextArea.value = str.substring(0, startPos) + sText + str.substring(endPos, str.length);
+    } else {
+            oTextArea.value += sText;
+    }
+
+    return true;
+}
+
+/**
+ * Validate date
+ */
+function checkDate(fld) {
+    var mo, day, yr;
+    var entry = fld.value;
+    var re = /\b\d{1,2}[\/]\d{1,2}[\/]\d{4}\b/;
+    if (re.test(entry)) {
+        var delimChar = (entry.indexOf("/") != -1) ? "/" : "-";
+        var delim1 = entry.indexOf(delimChar);
+        var delim2 = entry.lastIndexOf(delimChar);
+        mo = parseInt(entry.substring(0, delim1), 10);
+        day = parseInt(entry.substring(delim1+1, delim2), 10);
+        yr = parseInt(entry.substring(delim2+1), 10);
+        var testDate = new Date(yr, mo-1, day);
+        if (testDate.getDate( ) == day) {
+            if (testDate.getMonth( ) + 1 == mo) {
+                if (testDate.getFullYear( ) == yr) {
+                    return true;
+                } else {
+                    alert("There is a problem with the year entry.");
+                }
+            } else {
+                alert("There is a problem with the month entry.");
+            }
+        } else {
+            alert("There is a problem with the date entry.");
+        }
+    } else {
+        alert("Incorrect date format. Enter as mm/dd/yyyy.");
+    }
+    return false;
+}
+

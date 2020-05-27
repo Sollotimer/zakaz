@@ -1,0 +1,167 @@
+/**
+ * Cannonball Web JavaScript.
+ * Romain Huet
+ * @romainhuet
+ */
+(function($) {
+  /**
+   * Initialize Digits for Web as soon as the JavaScript SDK is loaded.
+   */
+    var isLogin = false;
+    // Initialize Digits using the API key.
+    function initDigits(){
+        Digits.init({ consumerKey: config.digitsConsumerKey, 
+            phoneNumber: '+7'
+        });
+
+        Digits
+            .embed({
+                container:'.digits-embed',
+                phoneNumber: '+7'
+            })
+            .done(onDigitsSuccess)
+            .fail(onDigitsError);
+        
+        if (window.location.href.indexOf('/ls/login/exit') !== -1)
+        {
+            $('.not-you').click();
+        }
+    }
+
+    (function waitInitDigits (initDigits) {
+        if ('undefined' == typeof Digits )
+        {
+            setTimeout (function () {
+                waitInitDigits(initDigits);
+            }, 300); // wait 100 ms
+        }
+        else
+        {
+            initDigits();
+        }
+    })(initDigits);
+    /**
+    * Handle the login failure.
+    */
+    function onLoginFailure(loginResponse) {
+        if (!$('div.popup_block.registration').is(':visible'))
+            $('.popup_bg').hide();
+    }
+
+    /**
+    * Handle the login once the user has completed the sign in with Digits.
+    * We must POST these headers to the server to safely invoke the Digits API
+    * and get the logged-in user's data.
+    */
+    function onDigitsSuccess(response) {
+        var oAuthHeaders = parseOAuthHeaders(response.oauth_echo_headers);
+
+        $('form').toArray().forEach(function(_form, i) {
+            if ( _form.hasOwnProperty('apiUrl') )
+                _form.apiUrl.value      = oAuthHeaders.apiUrl.replace(/\"/gi, "'");
+            if ( _form.hasOwnProperty('credentials') )
+                _form.credentials.value = oAuthHeaders.credentials.replace(/\"/gi, "'");
+        });
+
+        console.log($('.popup_block.login').is(':visible'));
+
+        if (isDigits && (window.location.href.indexOf('/login') !== -1 || $('.popup_block.login').is(':visible')))
+        {
+            console.log('login');
+            var btn = $('form[action="/login"]').find('input[name="act[login]"]')[0];
+            btn.click();
+        }
+        else if (window.location.href.indexOf('/registration/digits') !== -1 && isDigits)
+        {
+            console.log('digits');
+            var btn = $('form[action*="/registration/digits"]').find('input[name="act[digits]"]')[0];
+            btn.click();
+        }
+
+        /*
+        if ($('.popup_block.login').is(':visible'))
+        {
+        }*/
+
+        /*
+        if (isLogin) return;
+            console.log(frm);
+            console.log($('.popup_block.login-digits').is(':visible'));
+
+        if (window.location.href.indexOf('registration/digits') !== -1 && !isLogin && !$('.popup_block.login-digits').is(':visible')) {
+            isLogin = true;
+            var btn = $('input[name="act[digits]"]')[0];
+            
+            //var form = btn.closest('form');
+            //form.action = '/registration';
+            btn.click();
+        }
+        else if (window.location.href.indexOf('registration/digits') === -1 && !isLogin && $('.popup_block.login-digits').is(':visible')) {
+            isLogin = true;
+            var btn = $('input[name="act[login2]"]')[0];
+            btn.click();
+            console.log('login 1');
+        }
+        if ($('.popup_block.login-digits').is(':visible')) {
+            isLogin = true;
+            var btn = $('input[name="act[login2]"]')[0];
+            console.log(btn.closest('form'));
+            btn.click();
+            console.log('login 2');
+        }*/
+        /*
+        if (!(response instanceof Object))
+            window.location.href = window.location.pathname;
+
+        if (response.hasOwnProperty('url'))
+        {
+            if (response.url == 'login')
+            {
+                if (response.hasOwnProperty('phone_number'))
+                {
+                    $('.digits_number').toArray().forEach(function(o, i) { $(o).html(response.phone_number)});
+                    //$('input[name="signup[phone]"').toArray().forEach(function(o, i) { o.value = response.phone_number; });
+                }
+                if ($('div.popup_block.registration').is(':visible'))
+                {
+                    $('div.registration').hide();
+            }
+            $('.popup_bg').add('.'+'login').show();
+        }
+        else if (window.location.pathname.indexOf('gruzy') !== -1)
+        {
+           window.location.href = '/cargo'; 
+        }
+        else {
+          //window.location.href =  response.url == 'public.account' ? window.location.origin+'/account' : response.url;
+          window.location.href = window.location.origin+'/cargo';
+        }
+    }
+    else {
+      $('.digits_number').toArray().forEach(function(o, i) { $(o).html(response.phone_number)});;
+      $('input[name="signup[phone]"').toArray().forEach(function(o, i) { o.value = response.phone_number; });
+      if (!$('div.popup_block.registration').is(':visible'))
+        $('.popup_bg').hide();
+    }
+    //*/
+    }
+
+    function onDigitsError(response) {
+        if (!$('div.popup_block.registration').is(':visible'))
+            $('.popup_bg').hide();
+        $('.contact-error').eq(0).html('<strong>'+response.error+'</strong>');
+    }
+    /**
+    * Parse OAuth Echo Headers:
+    * 'X-Verify-Credentials-Authorization'
+    * 'X-Auth-Service-Provider'
+    */
+    function parseOAuthHeaders(oAuthEchoHeaders) {
+        var credentials = oAuthEchoHeaders['X-Verify-Credentials-Authorization'].replace(/\"/gi, "'");
+        var apiUrl = oAuthEchoHeaders['X-Auth-Service-Provider'].replace(/\"/gi, "'");
+        return {
+            apiUrl: apiUrl,
+            credentials: credentials,
+        };
+    }
+})(jQuery);

@@ -1,0 +1,939 @@
+// no conflict construction
+(function($){
+    window.history.replaceState({},'', window.location.href.replace(/tokenAuth_(\d*\w*)/gi, ''));
+    // onDocumentReady
+    $(function(){
+        $(".js_topMenu").on('mouseenter mouseleave', function(e){
+            var el = $(this);
+						if (e.type == 'mouseenter') {
+							el.addClass('active');
+						}
+						else if (e.type == 'mouseleave') {
+							el.removeClass('active');
+						}
+        });
+        if($('select')){
+            $('select').each(function() {
+                var fal = $(this).attr('multiple');
+
+                if(fal === undefined)
+                {
+                    var opt = {};
+                        opt.minimumInputLength = -1;
+
+                    if($(this).attr('data-show-searchbox') === undefined)
+                        opt.minimumResultsForSearch = Infinity;
+
+                    $(this).select2(opt);
+                }
+            });
+        }
+				$('#chAl').on('change', function(e) {
+					if (this.checked)
+						$('.cstCh').prop('checked', true);
+					else
+						$('.cstCh').prop('checked', false);
+				});
+        function _resize() {
+          var _diff =window.screen.height - $('body').height();
+          if (_diff > 90) {
+            $('div.bottom_menu').css({
+              position: 'fixed',
+              bottom: '90px',
+              left: 0,
+              right: 0,
+            });
+            $('div.footer').css({
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              right: 0,
+            });
+          }
+          else {
+            $('div.bottom_menu').css({
+              position: 'relative',
+              bottom: 0,
+            });
+            $('div.footer').css({
+              position: 'relative',
+            });
+          }
+        }
+        _resize();
+
+        function log( message ) {
+          console.log(message);
+        }
+        $("#search_city_from, #search_city_to, #add_cargo_city_from, #add_cargo_city_to, #add_cars_city_from, #add_cars_city_to, #filter_from, #filter_to").on('change', function(){
+                        console.log(this.id);
+                        console.log($(this).attr('id'));
+          if ( $(this).val() == '' ) {
+            $('#hidden_'+this.id).val('');
+            if (this.id == 'add_cargo_city_from') {
+              $('#hidden_add_cargo_city_from').val('');
+              $('#hidden_add_cargo_region_from').val('');
+              $('#hidden_add_cargo_country_from').val('');
+            }
+            else if (this.id == 'add_cargo_city_to') {
+              $('#hidden_add_cargo_city_to').val('');
+              $('#hidden_add_cargo_region_to').val('');
+              $('#hidden_add_cargo_country_to').val('');
+            }
+            else if (this.id == 'add_cars_city_from') {
+              $('#hidden_add_cars_city_from').val('');
+              $('#hidden_add_cars_region_from').val('');
+              $('#hidden_add_cars_country_from').val('');
+            }
+            else if (this.id == 'add_cars_city_to') {
+              $('#hidden_add_cars_city_to').val('');
+              $('#hidden_add_cars_region_to').val('');
+              $('#hidden_add_cars_country_to').val('');
+            }
+            else if (this.id == 'filter_from') {
+
+                $('#filter_city_from').val('');
+                $('#filter_region_from').val('');
+                $('#filter_country_from').val('');
+            }
+            else if (this.id == 'filter_to') {
+                $('#filter_city_to').val('');
+                $('#filter_region_to').val('');
+                $('#filter_country_to').val('');
+            }
+          }
+        });
+
+        $("#search_city_from, #search_city_to, #add_cargo_city_from, #add_cargo_city_to, #add_cars_city_from, #add_cars_city_to, #filter_from, #filter_to").autocomplete({
+            source: function( request, response ) {
+                var type = 'cities';
+                if ( window.location.pathname.indexOf("account/edit-account") == -1 )
+                  type = 'regions';
+                
+
+                    $.ajax({
+                      url: window.location.origin+"/public/ajax/find-city/",
+                      dataType: "json",
+                      contentType: 'application/x-www-form-urlencoded',
+                      method: 'POST',
+                      data: {
+                        term: request.term,
+                        //from_page: this.element[0].id
+                        place_type: type
+                      },
+                      success: function(data, textStatus, jqXHR) {
+                        var data = $(jqXHR.responseJSON).map(function(i, o){
+                            return {
+                              value: o.name,
+                              id: o.id
+                            };
+                        }).get();
+                        response(data);
+                      },
+                      close: function(event, ui) {
+                        console.log('close', ui);
+                                     /*
+                        $( this ).removeClass( "ui-corner-top" ).addClass( "ui-corner-all" );
+
+                        var prefix = this.id.replace('search_place_', '');
+                        var place_id = $('#place_id_'+prefix).val();
+
+                        $.ajax({
+                            url: window.location.origin+"/public/ajax/find-city/",
+                            dataType: "json",
+                            contentType: 'application/x-www-form-urlencoded',
+                            method: 'POST',
+                            data: {
+                                place_id: place_id,
+                            },
+                            success: function(data, textStatus, jqXHR) {
+                                console.log('save place_id');
+                            },
+                            error: function(data) {
+                                console.log('error');
+                            },
+                        })
+                        //*/
+                      },
+                      error: function(data) {
+                          console.log('error');
+                      }
+                    });
+            },  
+            minLength: 2,
+            html: true,
+						autoFocus: true,
+            select: function( event, ui ) {
+                  $(this).val(ui.item.value);
+                  //$('input[name="account[location_from]"]').val('city_'+ui.item.city_id);
+                  //$('input[name="company[location_from]"]').val('city_'+ui.item.city_id);
+
+                  if (this.id == 'add_cars_city_from' || this.id == 'add_cargo_city_from' || this.id == 'filter_from') {
+                          /*
+                      if (ui.item.hasOwnProperty('city_id')) {
+                          $('input[name="myoff[city_from]"]').eq(0).val(ui.item.city_id);
+                      }
+                      if (ui.item.hasOwnProperty('region_id')) {
+                          $('input[name="myoff[region_from]"]').eq(0).val(ui.item.region_id);
+                      }
+                      if (ui.item.hasOwnProperty('country_id')) {
+                          $('input[name="myoff[country_from]"]').eq(0).val(ui.item.country_id);
+                      }
+                      //*/
+                       $('input[name="account[location_from]"]').val(ui.item.id);
+                       $('input[name="myoff[city_from]"]').val(ui.item.id);
+                       //$('company[location_from]').eq(0).val(ui.item.id);
+                  }
+                  else if (this.id == 'add_cars_city_to' || this.id == 'add_cargo_city_to' || this.id == 'filter_to') {
+                      /*/
+                      if (ui.item.hasOwnProperty('city_id')) {
+                          $('input[name="myoff[city_to]"]').eq(0).val(ui.item.city_id);
+                      }
+                      if (ui.item.hasOwnProperty('region_id')) {
+                          $('input[name="myoff[region_to]"]').eq(0).val(ui.item.region_id);
+                      }
+                      if (ui.item.hasOwnProperty('country_id')) {
+                          $('input[name="myoff[country_to]"]').eq(0).val(ui.item.country_id);
+                      }
+                      //*/
+                       $('input[name="account[location_to]"]').val(ui.item.id);
+                       $('input[name="myoff[city_to]"]').val(ui.item.id);
+                  }
+                  else if ((this.id == 'search_city_from' || this.id == 'search_city_to') && ui.item.hasOwnProperty('id') && ui.item.id != '') {
+                      $('#hidden_' + this.id).val(ui.item.id);
+                  }
+									return false;
+            },
+            open: function(event, ui) {
+							console.log('open');
+              $( this ).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
+            },
+            close: function(event, ui) {
+							console.log('close 2', ui);
+              $( this ).removeClass( "ui-corner-top" ).addClass( "ui-corner-all" );
+                  var place_id = '';
+                  if ( window.location.pathname.indexOf('account/edit-account') == 1 || window.location.pathname.indexOf('cars') == 1 || window.location.pathname.indexOf('cargo') == 1 ) {
+                      //*/
+                      var place_id = '';
+                      if (window.location.pathname.indexOf('account/edit-account') == 1)
+                          place_id = $('input[name="account[location_from]"]').val();
+                      else {
+                          if ( this.id == 'filter_from' )
+                              place_id = $('#filter_city_from').val();
+                          if ( this.id == 'filter_to' )
+                              place_id = $('#filter_city_to').val();
+                      }
+
+                        $.ajax({
+                            url: window.location.origin+"/public/ajax/find-city/",
+                            dataType: "json",
+                            contentType: 'application/x-www-form-urlencoded',
+                            method: 'POST',
+                            data: {
+                                place_id: place_id,
+                            },
+                            success: function(data, textStatus, jqXHR) {
+                                console.log('save place_id');
+                            },
+                            error: function(data) {
+                                console.log('error');
+                            },
+                        })
+                    }
+
+              //*/
+            }
+        });
+        // end city autocomplete
+
+        // autocomplete car start
+        $("input[name='signup[car]'], input[name='account[car]']").autocomplete({
+            source: function( request, response ) {
+                $.ajax({
+                    url: window.location.origin+"/public/ajax/find-car/",
+                    dataType: "json",
+                    contentType: 'application/x-www-form-urlencoded',
+                    method: 'POST',
+                    data: {
+                        term: request.term
+                    },
+                    success: function(data, textStatus, jqXHR) {
+                        var data = $(jqXHR.responseJSON).map(function(i, o){
+                            return {
+                                value: o.name
+                            };
+                        }).get();
+                        response(data);
+                    },
+                    error: function(data) {
+                        console.log(data);
+                        console.log('error');
+                    }
+                });
+            },
+            minLength: 2,
+            html: true,
+            autoFocus: false,
+            select: function( event, ui ) {
+                $(this).val(ui.item.value);
+                return false;
+            },
+            open: function() {
+                console.log('open');
+                $( this).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
+            },
+            close: function() {
+                console.log('close 1');
+                $( this ).removeClass( "ui-corner-top" ).addClass( "ui-corner-all" );
+                
+                /*
+                $.ajax({
+                            url: window.location.origin+"/public/ajax/find-city/",
+                            dataType: "json",
+                            contentType: 'application/x-www-form-urlencoded',
+                            method: 'POST',
+                            data: {
+                                place_id: place_id,
+                            },
+                            success: function(data, textStatus, jqXHR) {
+                                console.log('save place_id');
+                            },
+                            error: function(data) {
+                                console.log('error');
+                            },
+                        })//*/
+            }
+        });
+        // autocomplete car end
+
+        $("#search_city_from, #search_city_to, #add_cargo_city_from, #add_cargo_city_to, #add_cars_city_from, #add_cars_city_to").on('change', function() {
+            $('#hidden_'+this.id).val('');
+            if (this.id == 'add_cargo_city_from') {
+              $('#hidden_add_cargo_city_from').val('');
+              $('#hidden_add_cargo_region_from').val('');
+              $('#hidden_add_cargo_country_from').val('');
+            }
+            else if (this.id == 'add_cargo_city_to') {
+              $('#hidden_add_cargo_city_to').val('');
+              $('#hidden_add_cargo_region_to').val('');
+              $('#hidden_add_cargo_country_to').val('');
+            }
+            else if (this.id == 'add_cars_city_from') {
+              $('#hidden_add_cars_city_from').val('');
+              $('#hidden_add_cars_region_from').val('');
+              $('#hidden_add_cars_country_from').val('');
+            }
+            else if (this.id == 'add_cars_city_to') {
+              $('#hidden_add_cars_city_to').val('');
+              $('#hidden_add_cars_region_to').val('');
+              $('#hidden_add_cars_country_to').val('');
+            }
+				});
+        $('input[name="signup[firstName]"], input[name="signup[lastName]"]').focusout(function (e) {
+            this.value = this.value.toLowerCase().trim();
+            this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
+        });
+
+        $('input[name="signup[placework]"], input[name="signup[company_name]').on('change', function() {
+            var input = this;
+            var company_name = this.value.trim();
+            var company_data = company_name.split(' ');
+            var company_attr = $('select[name="signup[type_ownership]"]');
+
+            if(company_data.length > 1)
+            {
+                company_attr.find('option').each(function (i, option) {
+                    if($(option).text().toLowerCase() === company_data[0].toLowerCase())
+                    {
+                        company_data.shift();
+                        company_attr.select2().val(option.value).trigger("change");
+
+                        $(input).val(company_data.join(' '));
+
+                        return false;
+                    }
+                });
+            }
+        });
+
+        $.getJSON("https://freegeoip.net/json/", function (data) {
+            var country_code_show = data.country_code == 'RU' ? 'phoneru' : 'phone';
+            var country_code_hide = data.country_code != 'RU' ? 'phoneru' : 'phone';
+            $('#'+country_code_show).show();
+            $('#'+country_code_hide).hide();
+        });
+      });
+})(jQuery);
+
+
+function getOpt(oChild, sLink)
+{
+	var CitName = (oChild.attr('id').substr(1));
+	CitName++;
+	
+	if(!$('#u'+CitName).attr('disabled')) {
+		$('#u'+CitName).attr('disabled', 'disabled');
+	}
+	
+	$(oChild).load(sLink, {}, 
+	function()
+	{
+	    $(oChild).get(0).selectedIndex=0;
+    	if(oChild+':disabled')
+    		$(oChild).removeAttr("disabled");
+    	else
+    		$(oChild).attr('disabled','disabled');
+	});
+};
+
+
+$(document).ready(function() {
+    $(document).on('click', '.MixpanelHooked', function (e) {
+        if (typeof amplitude !== 'undefined') {
+            if (this.getAttribute('data-mixpanel') == 'Show Cargo Contacts' || this.getAttribute('data-mixpanel') == 'Show Cars Contacts') {
+                amplitude.getInstance().logEvent(this.getAttribute('data-mixpanel'));
+            }
+            else {
+                if(this.getAttribute('data-vip') == '1') {
+                    console.log('Event: Hooked Vip', 'source:', this.getAttribute('data-mixpanel'));
+                    amplitude.getInstance().logEvent('Hooked Vip', {'source': this.getAttribute('data-mixpanel')});
+                } else {
+                    console.log('Event: ', this.getAttribute('data-mixpanel'));
+                    amplitude.getInstance().logEvent('Hooked', {'click': this.getAttribute('data-mixpanel')});
+                }
+            }
+        }
+
+        if (typeof mixpanel !== 'undefined') {
+            if (this.getAttribute('data-mixpanel') == 'Show Cargo Contacts' || this.getAttribute('data-mixpanel') == 'Show Cars Contacts') {
+                mixpanel.track(this.getAttribute('data-mixpanel'));
+            }
+            else {
+                if(this.getAttribute('data-vip') == '1') {
+                    console.log('Event: Hooked Vip', 'source:', this.getAttribute('data-mixpanel'));
+                    mixpanel.track('Hooked Vip', {'source': this.getAttribute('data-mixpanel')});
+                } else {
+                    console.log('Event: ', this.getAttribute('data-mixpanel'));
+                    mixpanel.track('Hooked', {'click': this.getAttribute('data-mixpanel')});
+                }
+            }
+        }
+    });
+
+    $("select[name='signup[type_ownership]']").on('click', function(){
+        if (this.value == 'Физ. лицо') {
+            //$("input[name='signup[company_name]']").prop('disabled', true);
+            $("input[name='signup[placework]']").prop('disabled', true);
+            $("input[name='signup[placework]']").val('');
+        }
+        else {
+            //$("input[name='signup[company_name]']").prop('disabled', false);
+            $("input[name='signup[placework]']").prop('disabled', false).focus();
+        }
+    });
+
+    $("select[name='account[type_ownership]']").on('click', function(){
+        if (this.value == 'Физ. лицо') {
+            //$("input[name='signup[company_name]']").prop('disabled', true);
+            $("input[name='account[placework]']").prop('disabled', true);
+            $("input[name='account[placework]']").val('');
+        }
+        else {
+            //$("input[name='signup[company_name]']").prop('disabled', false);
+            $("input[name='account[placework]']").prop('disabled', false).focus();
+        }
+    });
+
+    $("select[name='signup[company_type]']").on('click', function(){
+        if (this.value == '3' || this.value == '6') {
+            $("input[name='signup[kinds_activity]']").closest('.reg_block').show();
+            $("input[name='signup[kinds_activity]']").prop('disabled', false);
+        }
+        else {
+            $("input[name='signup[kinds_activity]']").closest('.reg_block').hide();
+            $("input[name='signup[kinds_activity]']").prop('disabled', true);
+        }
+    });
+
+    $("select[name='company[company_type]']").on('click', function(){
+        if (this.value == '3' || this.value == '6') {
+            $(".company_tags").show();
+            $(".company_tags").prop('disabled', false);
+        }
+        else {
+            $(".company_tags").hide();
+            $(".company_tags").prop('disabled', true);
+        }
+    });
+
+    $('input[name="company[company_name]"]').focusout(function(e){
+        this.value = this.value.trim();
+        var aName = this.value.split(' ');
+        var that = this.value;
+        var rem = false;
+        if (aName.length > 1)
+        {
+            $('select[name="company[type_ownership]"] > option').each(
+                function (i, o) {
+                    rem = ($(o).text().toLowerCase() == aName[0].toLowerCase());
+                    $(o).prop('selected', rem);
+                    if(rem)
+                        return false;
+                }
+            );
+            if (rem){
+                $('select[name="company[type_ownership]"] > option:selected').closest('h3').find('span.select2-chosen').html(aName[0]);
+                aName[0] = '';
+                that = aName.join(' ');
+            }
+            this.value = that.trim();
+            this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
+        }
+    });
+    $('input[name="account[placework]').focusout(function(e){
+        this.value = this.value.trim();
+        var aName = this.value.split(' ');
+        var that = this.value;
+        var rem = false;
+        if (aName.length > 1)
+        {
+            $('select[name="account[type_ownership]"] > option').each(
+                function (i, o) {
+                    rem = ($(o).text().toLowerCase() == aName[0].toLowerCase());
+                    $(o).prop('selected', rem);
+                    if(rem)
+                        return false;
+                }
+            );
+            if (rem){
+                $('select[name="account[type_ownership]"] > option:selected').closest('span').find('span.select2-chosen').html(aName[0]);
+                aName[0] = '';
+                that = aName.join(' ');
+            }
+            this.value = that.trim();
+            this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
+        }
+    });
+
+    $("select[name='signup[typeProfile]']").on('click', function(){
+        if ( $(".popup_block.registration").is(':visible')) {
+            if ($(".popup_block.registration select[name='signup[typeProfile]']").select2('val') == 1) {
+                $(".popup_block.registration input[name='signup[callsign]']").closest('.reg_block').show();
+                $(".popup_block.registration input[name='signup[car]']").closest('.reg_block').show();
+            } else {
+                $(".popup_block.registration input[name='signup[callsign]']").closest('.reg_block').hide();
+                $(".popup_block.registration input[name='signup[car]']").closest('.reg_block').hide();
+            }
+        }
+        else {
+            if ($("select[name='signup[typeProfile]']").val() == 1) {
+                $("input[name='signup[callsign]']").closest('.reg_block').show();
+                $("input[name='signup[car]']").closest('.reg_block').show();
+            } else {
+                $("input[name='signup[callsign]']").closest('.reg_block').hide();
+                $("input[name='signup[car]']").closest('.reg_block').hide();
+            }
+        }
+    });
+
+    $('.search_top form').on('click', function(e){
+      if (this.action.indexOf('registration') == -1)
+        $(this).submit();
+      else
+        popup('registration');
+    });
+
+    document.documentElement.onkeyup=function(e) {
+        if(e.keyCode===27){
+            $('.popup_bg').add('.popup_block').hide();
+            $(".js_topMenu").removeClass('active');
+        }
+    }
+
+    $('._jHiddenLink').on('click', function(event){
+        event.preventDefault();
+        var _jSocialBox = $(this).parents('._jWrapper').find('._jHiddenBox');
+        if(_jSocialBox.is(':hidden')){
+            _jSocialBox.slideDown(150);
+        }else{
+            _jSocialBox.slideUp(150);
+        }
+        $(this).parents('._jWrapper').toggleClass('current')
+    });
+    $('._jHiddenLinks').on('click', function(event){
+        event.preventDefault();
+        var _jHideBox = $(this).parents('._jWrapper').find('._jHideBox');
+        if(_jHideBox.is(':hidden')){
+            _jHideBox.slideDown(150);
+            $(this).text('Свернуть папки');
+        }else{
+            _jHideBox.slideUp(150);
+            $(this).text('Развернуть папки');
+        }
+
+        $(this).parents('._jWrapper').toggleClass('current')
+    });
+
+    var _jLogin = $("a[href='/login']"),
+        _jRegistration = $("a[href='/registration']");
+    function popup(n, ca){
+        $('.popup_bg').add('.'+n).show();
+        $('input[name="act[login2]"]').hide();
+
+        if ('registration' == n)
+        {
+            ca = ca ? ca : 'default'; console.log('CA registration', ca);
+            $('div.popup_block.registration .ca').hide();
+            $('div.popup_block.registration .ca-'+ca).show();
+
+            $('input[name="signup[firstName]"]').focus();
+            if (typeof ga !== 'undefined') {
+                ga('send', 'event', 'Registration', 'Open popup');
+            }
+        }
+        if ('login' == n)
+        {
+            $('input[name="login"]').focus();
+        }
+    }
+    $(document).on('click', "a[href='/login']", function(e) {
+        e.preventDefault();
+        $('.popup_bg').add('.popup_block').hide();
+        window.scrollTo(0, 0);
+
+        popup('login');
+    });
+    $(document).on('click', "a[href='/registration']", function(e) {
+        var ca, dm = $(this).attr('data-mixpanel');
+
+        e.preventDefault();
+        $('.popup_bg').add('.popup_block').hide();
+        window.scrollTo(0, 0);
+
+        if(dm)
+        {
+            if(-1 !== dm.indexOf('Add Car'))   ca = 'car';
+            if(-1 !== dm.indexOf('Add Cargo')) ca = 'cargo';
+
+            if(-1 !== dm.indexOf('Cars Show Contacts')  || -1 !== dm.indexOf('Cars Read More'))   ca = 'contacts-car';
+            if(-1 !== dm.indexOf('Cargo Show Contacts') || -1 !== dm.indexOf('Cargo Read More')) ca = 'contacts-cargo';
+        }
+
+        popup('registration', ca);
+    });
+    $('.unregister').on('click', function(e) {
+        e.preventDefault();
+
+        $('.popup_bg').add('.popup_block').hide();
+        window.scrollTo(0, 0);
+
+        popup('registration');
+    });
+    /*
+    $('.unregister').on('click', function(e) {
+        e.preventDefault()
+        $('.popup_bg').add('.popup_block').hide();
+        window.scrollTo(0, 0);
+
+        popup('registration');
+    });*/
+    $('.popup_close').add('.popup_bg').on('click',function(){
+        $('.popup_bg').add('.popup_block').hide();
+    });
+    /*
+    $('.switcher_item').on('click', function(){
+        var _this = $(this),
+            block = _this.parent();
+        if(_this.hasClass('active')){
+            return false;
+        }else{
+            console.log(block);
+            block.children().removeClass('active');
+            _this.addClass('active');
+
+            console.log( $(_this) );
+        }
+    });
+    //*/
+
+    $('._jTooltip_link').on('click',function(event){
+        var elem = $(this).next();
+        event.preventDefault();
+        elem.show();
+        $('._jTooltip_close').on('click',function(){
+            elem.hide();
+        });
+    });
+
+    // Footer fix
+    function footer() {
+        var pageFooter = $('#pageFooter');
+        if ($(window).height() >= $(document).height()) {
+            var height = pageFooter.height();
+            pageFooter.css({position: 'absolute', bottom: 0});
+            pageFooter.parent().css({'padding-bottom': height});
+        } else {
+            pageFooter.css({position: 'relative'});
+            pageFooter.parent().css({'padding-bottom': 0});
+        }
+    }
+
+    footer();
+    $(window).resize(function () {
+        footer();
+    });
+//    var _jLo
+});
+
+function addFavourites(sUrl, iCompany)
+{
+	var sLink = sUrl+'type_add_favourite/company_'+iCompany;
+	$.ajax({
+  			type: 'GET',
+  			url: sLink,
+  			success: ''
+		});
+	
+	$('.star_'+iCompany).attr('src') == '/design/pic/red-star-2.gif' ? $('.star_'+iCompany).attr('src', '/design/pic/ico_star.gif') : $('.star_'+iCompany).attr('src', '/design/pic/red-star-2.gif');
+}
+
+function addOfferFav(sUrl, iOffer)
+{
+    var sLink = sUrl+'type_add_offerfav/offer_'+iOffer;
+    $.ajax({
+        type: 'GET',
+        url: sLink,
+        success: function () {
+
+        }
+    });
+
+    if ($('.sprites-favo_star').hasClass('active')) {
+        $('.sprites-favo_star').removeClass('active');
+    }
+    else {
+        $('.sprites-favo_star').addClass('active');
+    }
+}
+
+// ##CARGOPULL##
+
+function getWindowSize() 
+{
+    var myWidth = 0, myHeight = 0;
+    if( typeof( window.innerWidth ) == 'number' ) 
+    {
+        //Non-IE
+        myWidth = window.innerWidth;
+        myHeight = window.innerHeight;
+    } 
+    else 
+    if( document.documentElement && ( document.documentElement.clientWidth || document.documentElement.clientHeight ) ) 
+    {
+        //IE 6+ in 'standards compliant mode'
+        myWidth = document.documentElement.clientWidth;
+        myHeight = document.documentElement.clientHeight;
+    } 
+    else 
+    if( document.body && ( document.body.clientWidth || document.body.clientHeight ) ) 
+    {
+        //IE 4 compatible
+        myWidth = document.body.clientWidth;
+        myHeight = document.body.clientHeight;
+    }
+    return {width:myWidth, height:myHeight};
+}
+
+function getWindowScroll()
+{
+    var x,y;
+    if (self.pageYOffset) // all except Explorer
+    {
+    	x = self.pageXOffset;
+    	y = self.pageYOffset;
+    }
+    else if (document.documentElement && document.documentElement.scrollTop)
+    	// Explorer 6 Strict
+    {
+    	x = document.documentElement.scrollLeft;
+    	y = document.documentElement.scrollTop;
+    }
+    else if (document.body) // all other Explorers
+    {
+    	x = document.body.scrollLeft;
+    	y = document.body.scrollTop;
+    }    
+    return {'x':x,'y':y};
+}
+
+function showPopup(id)
+{
+    var scroll=getWindowScroll();
+    var win=getWindowSize();
+    var div=$(id);
+    div.show();
+    div.css('zIndex', div.css('zIndex')+1000);
+    if(div.offset()) {
+        if ((div.offset().top+div.height()) > (scroll.y+win.height))
+        {
+            div.css('top',(parseInt(div.css('top')) + ((scroll.y+win.height) - (div.offset().top+div.height())))+'px');
+        }
+    }
+    else {
+        div.css('top','300px');
+    }
+}
+
+function mouseX(evt) {
+  if (evt.pageX) return evt.pageX;
+  else if (evt.clientX)
+      return evt.clientX + (document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft);
+  else return null;
+}
+
+function mouseY(evt) {
+    if (evt.pageY) return evt.pageY;
+   else if (evt.clientY)
+      return evt.clientY + (document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop);
+   else return null;
+}
+
+function msgFloat (aRes, e) {
+    $('#floating_msg').remove();
+
+    window.iii=0;
+    var clr = aRes[1] ? 'green' : 'red';
+    var divW=150;
+    var divH=125;
+    var sLayer = "<div class='window_content' id='floating_content'>";
+        sLayer += "<div class='close' id='floating_close'>";
+        sLayer += "<a href='javascript:void(0);' onclick=$('#floating_msg').remove();>";
+        sLayer += "<img src='/design/pic/btn_close.gif' border='0' />";
+        sLayer += "</a>";
+        sLayer += "</div>";
+        sLayer += "<div style='line-height: 25px;padding-top:15px;text-align:center;font-size:16px;color:"+clr+";font-weight:bold'>"+aRes[0]+"</div>";
+	    sLayer += "<br style='clear: both'/><br/>"
+
+
+    $("<div id='floating_msg' class='floating_window'>"+sLayer+"</div>").appendTo('body');     
+    $("#floating_msg").draggable();
+    
+	if(window.iii==0) {
+        var x;
+		var y;
+		if(document.scrollHeight) {
+			x = document.scrollWidth;
+			y = document.scrollHeight;
+		}
+		else if (self.innerHeight) {
+		    x = self.innerWidth;
+		    y = self.innerHeight;
+		} else if (document.documentElement && document.documentElement.clientHeight) {
+		    x = document.documentElement.clientWidth;
+		    y = document.documentElement.clientHeight;
+		} else if (document.body) {
+		    x = document.body.clientWidth;
+		    y = document.body.clientHeight;
+		}
+			
+		xPos = mouseX(e);
+   		yPos = mouseY(e);
+   			
+   		if(xPos+divW+20>x) xPos-=divW;
+   		if(yPos+divH+20>y) yPos-=divH;
+   		$('#floating_msg').css('left',xPos).css('top',yPos);
+        $('#floating_msg').fadeOut(5000);
+
+		window.iii=2;
+	}
+		return false;
+}
+
+function getUserInfoFloat(id, e, aUser) {
+    
+    $('#floating_window_p_'+id).remove();
+    window.iii=0;
+    var divW=320;
+    var divH=125;
+
+     for (var i=0; i<aUser.length; i++) {
+         var pos = aUser[i]['occ'].length > 0 ? aUser[i]['occ'] : 'Сотрудник';
+         var sContact = aUser[i]['contact_name'];
+         var sCompany = aUser[i]['company_name'];;
+         var sLang = aUser[i]['lang'];
+         var icq = aUser[i]['icq'];
+         var skype = aUser[i]['skype'];
+         var msn = aUser[i]['msn'];
+         var email = aUser[i]['email'];
+         var p_work = aUser[i]['p_work'];
+         var p_mob = aUser[i]['p_mob'];
+         var p_fax = aUser[i]['p_fax'];
+         var phones = aUser[i]['phones'];
+         var sLink = '/companyinfo/id_'+aUser[i]['company_id'];
+     }
+     
+     var sLayer = "<div class='window_header' id='floating_header_"+id+"'>"+sContact+"</div>";
+     sLayer += "<div class='window_content' id='floating_content_"+id+"'>";
+     sLayer += "<div class='close' id='floating_close_"+id+"'>";
+     sLayer += "<a href='javascript:void(0);' onclick=$('#floating_window_p_"+id+"').remove();>";
+     sLayer += "<img src='/design/pic/btn_close.gif' border='0' />";
+     sLayer += "</a>";
+     sLayer += "</div>";
+     sLayer += "<div style='line-height: 25px;'>";
+     sLayer += "<span>"+pos+"</span>";
+     sLayer += "&nbsp;компании&nbsp;"
+     sLayer += "<a href='"+sLink+"'>"+sCompany+"</a>";
+     sLayer += "</div>";
+     if(sLang.length) {
+         sLayer += "<div style='line-height: 25px'>Говорит на: "+sLang+"</div>";
+     }
+     sLayer += "<div id='left_info'>"+
+			"<ul id='l_bl'>"+
+			"<li id='icq'>"+icq+"</li>"+
+			"<li id='skype'><a href='skypeto:"+skype+"'>"+skype+"</a></li>"+
+			"<li id='msn'>"+msn+"</li>"+
+			
+			"</ul>"+
+		"</div>";
+	sLayer += "<div id='right_info'>"+
+			"<ul id='r_bl'>";
+			for(var j=0; j<phones.length; j++) {
+              sLayer +="<li id='"+phones[j][0]+"'>"+phones[j][1]+"</li>";
+			}
+	sLayer +="</ul></div>";
+	sLayer += "<br style='clear: both'/><br/>"
+    sLayer += "</div>";
+
+    $("<div id='floating_window_p_"+id+"' class='floating_window' style='position:absolute;'>"+sLayer+"</div>").appendTo('body');     
+    $("#floating_window_p_"+id).draggable();
+    
+	if(window.iii==0) {
+        var x;
+		var y;
+		if(document.scrollHeight) {
+			x = document.scrollWidth;
+			y = document.scrollHeight;
+		}
+		else if (self.innerHeight) {
+		    x = self.innerWidth;
+		    y = self.innerHeight;
+		} else if (document.documentElement && document.documentElement.clientHeight) {
+		    x = document.documentElement.clientWidth;
+		    y = document.documentElement.clientHeight;
+		} else if (document.body) {
+		    x = document.body.clientWidth;
+		    y = document.body.clientHeight;
+		}
+			
+		xPos = mouseX(e);
+   		yPos = mouseY(e);
+   			
+   		if(xPos+divW+20>x) xPos-=divW;
+   		if(yPos+divH+20>y) yPos-=divH;
+   		$('#floating_window_p_'+id).css('left',xPos).css('top',yPos);
+		window.iii=2;
+	}
+		return false;
+}
+
+
